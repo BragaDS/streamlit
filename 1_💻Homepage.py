@@ -126,4 +126,3 @@ st.markdown('''
 ''')
 txt2('LinkedIn', 'https://www.linkedin.com/in/ramon-braga-894a1125b/')
 txt2('Youtube', 'https://www.youtube.com/channel/UCgCegJMWW956kpdczpx2dCw')
-txt2('Youtube', 'https://www.youtube.com/channel/UCgCegJMWW956kpdczpx2dCw')
