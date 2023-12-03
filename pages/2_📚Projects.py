@@ -6,6 +6,7 @@ st.write("##")
 
 # Carregar a imagem
 image = Image.open('abtest.png')
+cluster_image = Image.open('clusteri.png')
 
 # Criar colunas
 col1, col2 = st.columns((1, 1))
@@ -21,4 +22,10 @@ with col1:
 
 # Coluna 2
 with col2:
-    st.write("")
+    st.image(cluster_image, use_column_width=True)
+    st.subheader("Cluster Analysis")
+    st.markdown("""
+        The cluster analysis involves grouping similar data points together to identify patterns and relationships within the dataset. In this project, K-means clustering was applied to categorize credit card customers based on their features. This method helps in understanding customer segments and tailoring strategies accordingly.
+    """)
+    st.markdown("[Visit Github](https://github.com/BragaDS/Clusterizacao-de-Clientes/blob/main/1ccyt.ipynb)")
+
