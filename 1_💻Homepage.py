@@ -15,7 +15,7 @@ with open("style.css") as f:
 #####################
 # Header 
 st.write('''
-# Paulo Ramon Lima Braga.
+# Paulo Ramon Lima Braga
 ##### *Resume* 
 ''')
 
