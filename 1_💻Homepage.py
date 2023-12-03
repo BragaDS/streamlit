@@ -125,8 +125,5 @@ st.markdown('''
 ## Social Media
 ''')
 txt2('LinkedIn', 'https://www.linkedin.com/in/ramon-braga-894a1125b/')
-<<<<<<< HEAD
 txt2('Youtube', 'https://www.youtube.com/channel/UCgCegJMWW956kpdczpx2dCw')
-=======
 txt2('Youtube', 'https://www.youtube.com/channel/UCgCegJMWW956kpdczpx2dCw')
->>>>>>> fb8a3667082a7da08c4695db64d81a705a46bdb6
