@@ -1,17 +1,18 @@
 import streamlit as st
+from PIL import Image
+import streamlit.components.v1 as components
+import os
+
+# Obtém o diretório do script
+script_directory = os.path.dirname(os.path.abspath(__file__))
+
+# Muda o diretório de trabalho para o diretório do script
+os.chdir(script_directory)
+
 
 st.set_page_config(
     page_title="Ramon Braga"
 )
-
-
-
-import streamlit as st
-from PIL import Image
-
-with open("style.css") as f:
-    st.markdown('<style>{}</style>'.format(f.read()), unsafe_allow_html=True)
-
 #####################
 # Header 
 st.write('''
@@ -19,7 +20,7 @@ st.write('''
 ##### *Resume* 
 ''')
 
-image = Image.open('dp.png')
+image = Image.open('img/dp.png')
 st.image(image, width=150)
 
 st.markdown('## Summary', unsafe_allow_html=True)
