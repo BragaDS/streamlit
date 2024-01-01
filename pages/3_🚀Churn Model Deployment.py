@@ -152,4 +152,4 @@ st.image(Image.open(image_path_scatter), caption='Gráfico de Dispersão com Clu
 # Inserir gráfico de dispersão com clusters marcados por churn
 st.image(Image.open(image_path_scatter_plot), caption='Gráfico de Dispersão com Clusters Marcados por Churn', use_column_width=True)
 
-st.write("Confira a implementação em Python no [repositório do GitHub](https://github.com/BragaDS/churn_clustering).")
+st.markdown("Confira a implementação em Python no [repositório do GitHub](https://github.com/BragaDS/churn_clustering).")
