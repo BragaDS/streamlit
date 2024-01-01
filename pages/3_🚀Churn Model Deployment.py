@@ -111,6 +111,7 @@ else:
 # Carregar imagens geradas no notebook
 image_path_bar_chart = "img/bar_cluster.png"
 image_path_scatter_plot = "img/Cluster_Churn.png"
+image_path_scatter = "img/cluster.png"
 
 # Exibir título do relatório
 st.title("Entenda seu Grupo")
