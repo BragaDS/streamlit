@@ -146,4 +146,7 @@ Essas métricas oferecem uma perspectiva detalhada das propensões variadas para
 st.image(Image.open(image_path_bar_chart), caption='Gráfico de Barras - Distribuição de Churn por Grupo', use_column_width=True)
 
 # Inserir gráfico de dispersão com clusters marcados por churn
+st.image(Image.open(image_path_scatter), caption='Gráfico de Dispersão com Clusters', use_column_width=True)
+
+# Inserir gráfico de dispersão com clusters marcados por churn
 st.image(Image.open(image_path_scatter_plot), caption='Gráfico de Dispersão com Clusters Marcados por Churn', use_column_width=True)
