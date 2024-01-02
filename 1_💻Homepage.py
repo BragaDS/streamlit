@@ -2,6 +2,16 @@ import streamlit as st
 from PIL import Image
 import os
 
+st.write("""
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FMHPECVJSG"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-FMHPECVJSG');
+</script>
+""")
+
 # Obtém o diretório do script
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
