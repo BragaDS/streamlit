@@ -2,6 +2,9 @@ import streamlit as st
 from PIL import Image
 import os
 
+with open("google_analytics.html", "r") as f:
+    html_data = f.read()
+
 # Obtém o diretório do script
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
