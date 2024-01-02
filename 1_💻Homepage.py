@@ -3,21 +3,6 @@ from PIL import Image
 import streamlit.components.v1 as components, declare_component
 import os
 
-# Defina o componente usando declare_component
-google_analytics_component = declare_component(
-    "google_analytics",
-    url="https://www.googletagmanager.com/gtag/js?id=G-FMHPECVJSG",
-    config={
-        "window.dataLayer = window.dataLayer || [];"
-        "function gtag(){dataLayer.push(arguments);}"
-        "gtag('js', new Date());"
-        "gtag('config', 'G-FMHPECVJSG');"
-    },
-    unsafe_allow_html=True
-)
-
-google_analytics_component()
-
 # Obtém o diretório do script
 script_directory = os.path.dirname(os.path.abspath(__file__))
 
