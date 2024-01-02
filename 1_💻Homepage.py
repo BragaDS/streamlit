@@ -14,7 +14,7 @@ analytics_code = """
 """
 
 # Renderiza o código do Google Analytics no Streamlit
-st.markdown(analytics_code, unsafe_allow_html=True)
+st.markdown(analytics_code, unsafe_allow_html=False)
 
 # Obtém o diretório do script
 script_directory = os.path.dirname(os.path.abspath(__file__))
