@@ -9,6 +9,10 @@ script_directory = os.path.dirname(os.path.abspath(__file__))
 # Muda o diretório de trabalho para o diretório do script
 os.chdir(script_directory)
 
+# Include Google Analytics tracking code
+with open("google_analytics.html", "r") as f:
+    html_code = f.read()
+    components.html(html_code, height=0)
 
 st.set_page_config(
     page_title="Ramon Braga"
