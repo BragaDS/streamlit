@@ -1,6 +1,5 @@
 import streamlit as st
 from PIL import Image
-import streamlit.components.v1 as components, declare_component
 import os
 
 # Obtém o diretório do script
