@@ -4,7 +4,7 @@ import streamlit.components.v1 as components
 import os
 
 # Se a variável de ambiente ENABLE_ANALYTICS estiver definida como 'true', incluir o código de rastreamento
-    st.markdown("""
+st.markdown("""
     <!-- Código de rastreamento do Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-FMHPECVJSG"></script>
     <script>
