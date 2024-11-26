@@ -1,119 +1,155 @@
-import os
-import pandas as pd
 import streamlit as st
+import numpy as np
+import pandas as pd
+import joblib
+from PIL import Image
 
-# Função para processar os arquivos CSV
-def processar_csv(arquivos_csv, caminho_consolidado, porcentagem_limite):
-    # Lista para armazenar os DataFrames de cada arquivo
-    dataframes = []
-    
-    # Se não houver arquivos CSV, mostrar um erro
-    if not arquivos_csv:
-        st.error("Nenhum arquivo CSV foi carregado!")
-        return None
-    
-    # Iterar por todos os arquivos CSV
-    for arquivo in arquivos_csv:
-        # Carregar o arquivo CSV em um DataFrame e adicionar à lista
-        try:
-            df = pd.read_csv(arquivo, encoding='latin1', sep=';')
-            dataframes.append(df)
-            st.write(f"Arquivo carregado com sucesso: {arquivo.name}")
-        except Exception as e:
-            st.error(f"Erro ao carregar o arquivo {arquivo.name}: {e}")
-    
-    # Verificar se a lista de DataFrames não está vazia
-    if not dataframes:
-        st.error("Nenhum arquivo foi carregado corretamente.")
-        return None
-    
-    # Concatenar todos os DataFrames em um único
-    dados_consolidados = pd.concat(dataframes, ignore_index=True)
+# Carregar modelos e outros dados necessários
+scaler = joblib.load("model/churn_scaler_model.joblib")
+pca = joblib.load("model/churn_pca_model.joblib")
+kmeans = joblib.load("model/churn_kmeans_model.joblib")
+xgb = joblib.load("model/churn_xgb_model.joblib")
 
-    # Criar o diretório para o arquivo consolidado, se não existir
-    if not os.path.exists(caminho_consolidado):
-        os.makedirs(caminho_consolidado)
-    
-    # Caminho para salvar o arquivo consolidado
-    caminho_saida = os.path.join(caminho_consolidado, 'consolidado.csv')
-    
-    # Salvar o arquivo consolidado
-    dados_consolidados.to_csv(caminho_saida, index=False, encoding='latin1', sep=';')
-    
-    # Retornar os dados consolidados
-    return dados_consolidados
+# Títulos e mapeamentos
+st.title("🚀 Churn Analysis and Customer Segmentation: Unveiling Patterns with Machine Learning 🚀")
 
-# Função para processar os dados e calcular as porcentagens
-def calcular_porcentagem(dados):
-    # Converter a coluna VALOR para float
-    dados['VALOR'] = dados['VALOR'].str.replace('.', '', regex=False)
-    dados['VALOR'] = dados['VALOR'].str.replace(',', '.', regex=False)
-    dados["VALOR"] = dados["VALOR"].astype(float)
-    
-    # Converter a coluna COMPETENCIA para datetime
-    dados['COMPETENCIA'] = pd.to_datetime(dados['COMPETENCIA'], dayfirst=True, errors='coerce')
-    
-    # Agrupar os dados e somar os valores por IDFUNCIONAL, NOME_SERVIDOR e COMPETENCIA
-    dados_agrupados = dados.groupby(['IDFUNCIONAL', 'NOME_SERVIDOR', 'COMPETENCIA']).agg({'VALOR': 'sum'}).reset_index()
-    
-    # Ordenar os dados por IDFUNCIONAL, NOME_SERVIDOR e COMPETENCIA
-    dados_agrupados = dados_agrupados.sort_values(by=['IDFUNCIONAL', 'NOME_SERVIDOR', 'COMPETENCIA'])
-    
-    # Calcular o valor do mês anterior
-    dados_agrupados['VALOR_MES_ANTERIOR'] = dados_agrupados.groupby(['IDFUNCIONAL', 'NOME_SERVIDOR'])['VALOR'].shift(1)
-    
-    # Calcular a porcentagem de diferença entre o valor do mês atual e o anterior
-    dados_agrupados['PORCENTAGEM_DIFERENCA'] = (
-        (dados_agrupados['VALOR'] - dados_agrupados['VALOR_MES_ANTERIOR'])
-        / dados_agrupados['VALOR_MES_ANTERIOR']
-    ) * 100
-    
-    # Arredondar a porcentagem de diferença para 2 casas decimais
-    dados_agrupados['PORCENTAGEM_DIFERENCA'] = dados_agrupados['PORCENTAGEM_DIFERENCA'].round(2)
-    
-    # Substituir valores infinitos e NaN
-    dados_agrupados['PORCENTAGEM_DIFERENCA'] = dados_agrupados['PORCENTAGEM_DIFERENCA'].replace([float('inf'), -float('inf')], pd.NA)
-    dados_agrupados = dados_agrupados.dropna(subset=['PORCENTAGEM_DIFERENCA'])
-    
-    # Filtrar os resultados pela porcentagem limite
-    resultados_filtrados = dados_agrupados[dados_agrupados['PORCENTAGEM_DIFERENCA'] > porcentagem_limite]
-    
-    return resultados_filtrados
+gender_mapping = {'Feminino': 0, 'Masculino': 1}
+country_mapping = {'França': 0, 'Alemanha': 1, 'Espanha': 2}
 
-# Configuração do Streamlit
-st.title("Processamento de Dados CSV - Auxílio Transporte")
+# Entrada de dados do usuário
+credit_score = st.number_input("Pontuação de Crédito", min_value=0)
+country = st.selectbox("Selecione o País", ["França", "Alemanha", "Espanha"])
+gender = st.radio("Selecione seu gênero", ["Masculino", "Feminino"])
+age = st.number_input("Idade", min_value=18)
+tenure = st.number_input("Tempo de Relacionamento com o Banco", min_value=0, max_value=10)
+balance = st.number_input("Saldo em conta", format="%.2f", step=0.01)
+products_number = st.number_input("Numero de serviços com o Banco", min_value=1, max_value=4)
+credit_card = st.radio("Possui cartão de crédito?", ["Sim", "Não"])
+active_member = st.radio("É um membro ativo?", ["Sim", "Não"])
+estimated_salary = st.number_input("Salario estimado", format="%.2f", step=0.01)
 
-# **Seleção de arquivos CSV via o file uploader**
-arquivos_csv = st.file_uploader("Carregar arquivos CSV", type=["csv"], accept_multiple_files=True)
+# Aplicar mapeamento
+gender_numeric = gender_mapping[gender]
+country_numeric = country_mapping[country]
 
-# **Entrada da porcentagem limite para o filtro**
-porcentagem_limite = st.number_input("Informe a porcentagem limite para filtrar os dados:", min_value=0, max_value=100, value=50)
+# Criar DataFrame para XGBoost
+data_xgb = {
+    'credit_score': [credit_score],
+    'country': [country_numeric],
+    'gender': [gender_numeric],
+    'age': [age],
+    'tenure': [tenure],
+    'balance': [balance],
+    'products_number': [products_number],
+    'credit_card': [1 if credit_card == 'Sim' else 0],
+    'active_member': [1 if active_member == 'Sim' else 0],
+    'estimated_salary': [estimated_salary]
+}
 
-# Diretório para o arquivo consolidado
-caminho_consolidado = r'C:\Users\wokra\Desktop\Anderson\Auxilio\Folha Auxílo Transporte\consolidado'
+# Criar DataFrame para KMeans
+data_kmeans = {
+    'credit_score': [credit_score],
+    'country': [country_numeric],
+    'gender': [gender_numeric],
+    'age': [age],
+    'tenure': [tenure],
+    'balance': [balance],
+    'products_number': [products_number],
+    'credit_card': [1 if credit_card == 'Sim' else 0],
+    'active_member': [1 if active_member == 'Sim' else 0],
+    'estimated_salary': [estimated_salary]
+}
+df_xgb = pd.DataFrame(data_xgb)
+df_kmeans = pd.DataFrame(data_kmeans)
 
-# Processar os arquivos e calcular os resultados
-if arquivos_csv:
-    # Chamar a função para processar os arquivos e criar o consolidado
-    dados_consolidados = processar_csv(arquivos_csv, caminho_consolidado, porcentagem_limite)
-    
-    if dados_consolidados is not None:
-        # Calcular a porcentagem e filtrar os resultados
-        resultados_filtrados = calcular_porcentagem(dados_consolidados)
-        
-        if not resultados_filtrados.empty:
-            # Exibir os resultados filtrados no Streamlit
-            st.write(f"Resultados filtrados (porcentagem maior que {porcentagem_limite}%)")
-            st.dataframe(resultados_filtrados)
-            
-            # Botão para baixar o arquivo CSV com os resultados
-            resultado_final = os.path.join(caminho_consolidado, 'resultado.csv')
-            resultados_filtrados.to_csv(resultado_final, index=False, sep=";", encoding='latin1')
-            st.download_button(
-                label="Baixar arquivo filtrado",
-                data=open(resultado_final, "rb").read(),
-                file_name="resultado.csv",
-                mime="text/csv"
-            )
-        else:
-            st.write("Nenhum dado atendendo ao filtro de porcentagem foi encontrado.")
+# Aplicar escala aos dados para KMeans
+df_scaled_kmeans = pd.DataFrame(scaler.transform(df_kmeans))
+
+# Aplicar PCA para KMeans
+df_pca_kmeans = pd.DataFrame(pca.transform(df_scaled_kmeans))
+
+# Aplicar KMeans
+group = kmeans.predict(df_pca_kmeans)
+
+# Adicionar a coluna 'group' ao DataFrame df_xgb
+df_xgb['group'] = group + 1
+
+# Exibir o grupo atribuído pelo KMeans
+st.write("Grupo atribuído pelo KMeans:", group[0]+1)
+
+# Prever a probabilidade de churn com modelo XGBoost usando df_xgb
+proba_churn = xgb.predict_proba(df_xgb)[:, 1]
+# Adicionar a coluna 'proba_churn' ao DataFrame df_xgb
+df_xgb['proba_churn'] = proba_churn
+
+# Exibir a probabilidade de churn
+
+# Definir o limiar para interpretar a probabilidade
+limiar_churn = 0.5
+
+# Exibir a probabilidade de churn
+# Definir o limiar para interpretar a probabilidade
+limiar_churn = 0.5
+
+# Exibir a probabilidade de churn com estilização
+formatted_proba_churn = f"{proba_churn[0]*100:.2f}%"
+st.markdown(f"<p style='color: {'red' if proba_churn[0] > limiar_churn else 'green'};'>Probabilidade de Churn (XGBoost): {formatted_proba_churn}</p>", unsafe_allow_html=True)
+
+
+# Verificar se a probabilidade de churn é maior que o limiar
+if proba_churn[0] > limiar_churn:
+    # Cliente propenso a sair
+    st.markdown("**Este cliente está propenso a sair.**", unsafe_allow_html=True)
+else:
+    # Cliente não propenso a sair
+    st.markdown("**Este cliente não está propenso a sair.**", unsafe_allow_html=True)
+
+
+
+
+
+# Carregar imagens geradas no notebook
+image_path_bar_chart = "img/bar_cluster.png"
+image_path_scatter_plot = "img/Cluster_Churn.png"
+image_path_scatter = "img/cluster.png"
+
+# Exibir título do relatório
+st.title("Entenda seu Grupo")
+
+# Seção 4.1: Clustering Analysis
+st.header("4.1 Análise de Agrupamento (Clustering)")
+
+st.markdown("""
+Em nossa exploração de churn de clientes, utilizamos Análise de Componentes Principais (PCA) e agrupamento KMeans para identificar grupos distintos dentro dos dados. O gráfico de dispersão subsequente ilustrou esses clusters, revelando padrões significativos. Após uma análise mais detalhada, ficou evidente que os grupos 3 e 2 exibiram uma menor suscetibilidade ao churn.
+
+## Gráfico de Barras
+Para visualizar a distribuição de clientes em diferentes clusters, empregamos um gráfico de barras. Essa visualização forneceu uma visão clara da porcentagem de clientes em cada cluster.
+
+## Gráficos Adicionais
+Após nossa análise inicial e conclusões, examinamos a distribuição de características-chave dentro de cada cluster identificado. Os histogramas confirmaram descobertas anteriores, como o Grupo 3 exibindo taxas de churn mais baixas. Além disso, o Grupo 3 tende a ter indivíduos mais jovens, e aqueles com saldos mais baixos são menos propensos a cancelar. Essas informações oferecem uma compreensão mais rica dos fatores que contribuem para a retenção de clientes em clusters específicos, confirmando as tendências identificadas por meio da análise de boxplot.
+
+À medida que as empresas buscam implementar estratégias direcionadas, essas percepções refinadas podem orientar uma tomada de decisão mais eficaz e fomentar abordagens centradas no cliente.
+
+## Conclusão
+Nossa análise, apoiada por métricas, enfatiza percepções chave nas dinâmicas de churn de clientes. Os resultados do agrupamento destacaram grupos específicos, como os grupos 3 e 2, com porcentagens de churn mais baixas. Munidas dessa compreensão, as empresas podem formular estratégias direcionadas para reter clientes e aprimorar a satisfação geral.
+
+As porcentagens de churn para cada grupo são as seguintes:
+
+- Grupo 1: 22.90%
+- Grupo 2: 17.58%
+- Grupo 3: 13.43%
+- Grupo 4: 26.31%
+
+Essas métricas oferecem uma perspectiva detalhada das propensões variadas para churn em diferentes segmentos de clientes, confirmando as conclusões derivadas da análise de boxplot.
+""")
+
+# Inserir gráfico de barras
+st.image(Image.open(image_path_bar_chart), caption='Gráfico de Barras - Distribuição de Churn por Grupo', use_column_width=True)
+
+# Inserir gráfico de dispersão com clusters marcados por churn
+st.image(Image.open(image_path_scatter), caption='Gráfico de Dispersão com Clusters', use_column_width=True)
+
+# Inserir gráfico de dispersão com clusters marcados por churn
+st.image(Image.open(image_path_scatter_plot), caption='Gráfico de Dispersão com Clusters Marcados por Churn', use_column_width=True)
+
+st.markdown("Confira a implementação em Python no [repositório do GitHub](https://github.com/BragaDS/churn_clustering).")
